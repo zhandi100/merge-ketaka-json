@@ -1,0 +1,4 @@
+*.xml
+*.json
+*.kdb
+node_modules
