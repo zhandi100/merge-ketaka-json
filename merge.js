@@ -1,13 +1,15 @@
-var diffmode=true; 
-var jsonfn=process.argv[2]||"jiangkangyur201504.json";  //default json filename
-var json=require("./before_json/"+jsonfn);
+var diffmode=false;    // true for manual check, false for production
+
+var jsonfn=process.argv[2]||"ketaka84.json";  //default json filename
+if (jsonfn.indexOf(".json")==-1)jsonfn+=".json";
+var json=require("./"+jsonfn);
+
 
 //////////////////////////////////////////////////////////////////////
 
 var fs=require("fs");
 var mkdirp=require("./mkdirp");
 var path=require("path");
-//var content=fs.readFileSync("before_xml/084/lj0352_001.xml","utf8");
 var lastfile="",pages={},currentfile="",currentpage="";
 var unmerged=[],lasterror="",mergecount=0;
 
@@ -16,9 +18,7 @@ var errormerge=function(item){
 	lasterror="";
 	unmerged.push(JSON.stringify(item));
 }
-var fatal=function(msg,offset) {
-	throw msg+", offset:"+offset+" file:"+currentfile+" page:"+currentpage;
-}
+
 var loadPage=function(filecontent) {
 	var page={},lastidx=0,lastid="_";
 	filecontent.replace(/<pb id="(.+?)"\/>\n?/g,function(m,m1,idx){
@@ -44,7 +44,6 @@ var getOffsetOmitTag=function(pagecontent,offset){
 	for (var i=0;i<pagecontent.length;i++) {
 		var c=pagecontent[i];
 		if (c==='<') intag=true;
-
 		if (remain==0) {
 			if (intag) {
 				lasterror="offset inside tag";
@@ -63,20 +62,14 @@ var getOffsetOmitTag=function(pagecontent,offset){
 var merge=function(item) {
 	var page=pages[currentpage];
 	var realoff=getOffsetOmitTag(page,item.offset);
-	if (diffmode) {
-		page=page.substr(0,realoff)+"["+item.from+"|"+item.to+"]"+page.substr(realoff+item.from.length);;
-	} else {
-		page=page.substr(0,realoff)+item.to+page.substr(realoff+item.from.length);
-	}
-	pages[currentpage]=page;
+	var newtext=diffmode?("["+item.from+"|"+item.to+"]"):item.to;
+	pages[currentpage]=page.substr(0,realoff)+newtext+page.substr(realoff+item.from.length);
 }
 
 var createnewfilecontent=function() {
 	var s="";
 	for (var i in pages) {
-		if (i!=="_") {
-			s+='<pb id="'+i+'"/>\n';
-		}
+		if (i!=="_") s+='<pb id="'+i+'"/>\n';
 		s+=pages[i];
 	}
 	return s;
@@ -84,9 +77,10 @@ var createnewfilecontent=function() {
 
 var savemergefile=function() {
 	if (!lastfile)return;
-	var dir=path.dirname("merged_xml/"+lastfile);
-	mkdirp.sync(dir);	
-	fs.writeFileSync("merged_xml/"+lastfile,createnewfilecontent(),"utf8");
+	var outfn="merged_xml/"+lastfile;
+	var dir=path.dirname(outfn);
+	mkdirp.sync(dir);	//create folder if not exist
+	fs.writeFileSync(outfn,createnewfilecontent(),"utf8");
 }
 
 var trymerge=function(item){	
@@ -107,9 +101,9 @@ var trymerge=function(item){
 	}
 	lastfile=item.file;
 }
-json.map(trymerge);
 
-savemergefile();
+json.map(trymerge);
+savemergefile(); //last file content
 
 console.log("success merged",mergecount,"unmerged",unmerged.length,"check unmerged.json");
 fs.writeFileSync("unmerged.json",unmerged.join("\n"),"utf8")

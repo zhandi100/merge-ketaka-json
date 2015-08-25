@@ -5,14 +5,15 @@ https://drive.google.com/folderview?id=0B3g92NNibDrQfmJWVHR3TUpSNFRpanRQS3RkZkp3
 
 first step
 =====
-input: ketaka_json  and jiangkangyur.kdb (used by ketaka)
-output: before_json (add before text)
+input: ketaka_json_lst and jiangkangyur.kdb (used by ketaka)
+output: lstfilename+".json"
 
-    node gen_before_json jiangkangyur201504 
+    node gen lstfilename jiangkangyur201504
+
 
 second step
 =====
-input: before_json , before_xml
+input: combined json, files in before_xml
 output: merged_xml 
 
-    node domerge
+    node merge combined_json
