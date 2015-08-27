@@ -4,6 +4,8 @@ var jsonfn=process.argv[2]||"ketaka84.json";  //default json filename
 if (jsonfn.indexOf(".json")==-1)jsonfn+=".json";
 var json=require("./"+jsonfn);
 
+var source_xml_folder="before_xml/";
+var merged_xml_folder="merged_xml/";
 
 //////////////////////////////////////////////////////////////////////
 
@@ -77,7 +79,7 @@ var createnewfilecontent=function() {
 
 var savemergefile=function() {
 	if (!lastfile)return;
-	var outfn="merged_xml/"+lastfile;
+	var outfn=merged_xml_folder+lastfile;
 	var dir=path.dirname(outfn);
 	mkdirp.sync(dir);	//create folder if not exist
 	fs.writeFileSync(outfn,createnewfilecontent(),"utf8");
@@ -87,7 +89,7 @@ var trymerge=function(item){
 	if (item.file!==lastfile) {
 		savemergefile();
 		currentfile=item.file;
-		pages=loadPage(fs.readFileSync("before_xml/"+item.file,"utf8"));
+		pages=loadPage(fs.readFileSync(source_xml_folder+item.file,"utf8"));
 	}
 	currentpage=item.page;
 	var t=fetchText(pages[item.page],item.offset,item.from.length);
