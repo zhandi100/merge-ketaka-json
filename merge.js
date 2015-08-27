@@ -1,4 +1,4 @@
-var diffmode=false;    // true for manual check, false for production
+var diffmode=true;    // true for manual check, false for production
 
 var jsonfn=process.argv[2]||"ketaka84.json";  //default json filename
 if (jsonfn.indexOf(".json")==-1)jsonfn+=".json";
@@ -106,6 +106,6 @@ var trymerge=function(item){
 
 json.map(trymerge);
 savemergefile(); //last file content
-
-console.log("success merged",mergecount,"unmerged",unmerged.length,"check unmerged.json");
-fs.writeFileSync("unmerged.json",unmerged.join("\n"),"utf8")
+var unmergefn=jsonfn.replace(".json","")+"_unmerged.json";
+console.log("success merged",mergecount,"unmerged",unmerged.length,"check",unmergefn);
+fs.writeFileSync(unmergefn,unmerged.join("\n"),"utf8")
