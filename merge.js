@@ -98,8 +98,13 @@ var trymerge=function(item){
 		if (!lasterror) lasterror="xml mismatch:"+t;
 		errormerge(item);
 	} else {
-		mergecount++;
-		merge(item);
+		if (t===item.to){
+		 	if (!lasterror) lasterror="sametext";
+			errormerge(item);
+		} else {
+			mergecount++;
+			merge(item);
+		}
 	}
 	lastfile=item.file;
 }
