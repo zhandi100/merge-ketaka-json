@@ -1,4 +1,5 @@
 var diffmode=true;    // true for manual check, false for production
+var inserterr=true;
 
 var jsonfn=process.argv[2]||"ketaka84.json";  //default json filename
 if (jsonfn.indexOf(".json")==-1)jsonfn+=".json";
@@ -18,6 +19,7 @@ var unmerged=[],lasterror="",mergecount=0;
 var errormerge=function(item){
 	item.err=lasterror;
 	lasterror="";
+	if (inserterr) inserterror(item.offset,unmerged.length+1);
 	unmerged.push(JSON.stringify(item));
 }
 
@@ -36,9 +38,10 @@ var loadPage=function(filecontent) {
 }
 var fetchText=function(pagecontent,offset,len) {
 	var realoff=getOffsetOmitTag(pagecontent,offset);
-	if (typeof realoff !=="number") return null;
+	if (typeof realoff !=="number" || realoff<0) return null;
 	return pagecontent.substr(realoff,len);
 }
+
 
 var getOffsetOmitTag=function(pagecontent,offset){
 	var intag=false;
@@ -49,7 +52,7 @@ var getOffsetOmitTag=function(pagecontent,offset){
 		if (remain==0) {
 			if (intag) {
 				lasterror="offset inside tag";
-				return null;
+				return -i;
 			} else {
 				return i;
 			}
@@ -67,7 +70,11 @@ var merge=function(item) {
 	var newtext=diffmode?("["+item.from+"|"+item.to+"]"):item.to;
 	pages[currentpage]=page.substr(0,realoff)+newtext+page.substr(realoff+item.from.length);
 }
-
+var inserterror=function(offset,err) {
+	var page=pages[currentpage];
+	var realoff=Math.abs(getOffsetOmitTag(page,offset));
+	pages[currentpage]=page.substr(0,realoff)+"!"+err+page.substr(realoff);
+}
 var createnewfilecontent=function() {
 	var s="";
 	for (var i in pages) {
@@ -94,7 +101,10 @@ var trymerge=function(item){
 	currentpage=item.page;
 	var t=fetchText(pages[item.page],item.offset,item.from.length);
 
-	if (t!==item.from) {
+	if (!t) {
+		if (!lasterror) lasterror="invalid offset";
+		errormerge(item);
+	} else if (t!==item.from) {
 		if (!lasterror) lasterror="xml mismatch:"+t;
 		errormerge(item);
 	} else {
