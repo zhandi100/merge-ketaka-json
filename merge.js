@@ -1,5 +1,5 @@
 var diffmode=true;    // true for manual check, false for production
-var inserterr=true;
+var debug=true;
 
 var jsonfn=process.argv[2]||"ketaka84.json";  //default json filename
 if (jsonfn.indexOf(".json")==-1)jsonfn+=".json";
@@ -19,7 +19,7 @@ var unmerged=[],lasterror="",mergecount=0;
 var errormerge=function(item){
 	item.err=lasterror;
 	lasterror="";
-	if (inserterr) inserterror(item.offset,unmerged.length+1);
+	if (debug) inserterror(item.offset,unmerged.length+1);
 	unmerged.push(JSON.stringify(item));
 }
 
@@ -109,7 +109,7 @@ var trymerge=function(item){
 		errormerge(item);
 	} else {
 		if (t===item.to){
-		 	if (!lasterror) lasterror="sametext";
+		 	lasterror="sametext";
 			errormerge(item);
 		} else {
 			mergecount++;
